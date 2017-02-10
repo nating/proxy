@@ -16,7 +16,7 @@ function notFound(res){
 	res.end("404: File not found:");
 }
 
-http.createServer(function(b_req,b_res){
+var server = http.createServer(function(b_req,b_res){
 	console.log("Recieved a request for: "+b_req.url);
 
 	//Parse the requested URL
@@ -70,6 +70,19 @@ http.createServer(function(b_req,b_res){
 	});
 
 
-}).listen(port,host, function(){
+})
+
+server.listen(port,host, function(){
 	console.log("Listening on:"+host+":"+port);
 });
+
+//Dynamically change the host and port if they are changed in the config file
+fs.watchFile("config.json",function(){
+	config = JSON.parse(fs.readFileSync("config.json"));
+	host = config.host;
+	port = config.port;
+	server.close();
+	server.listen(port,host, function(){
+		console.log("Now listening on:"+host+":"+port);
+	});
+})
