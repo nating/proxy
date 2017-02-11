@@ -1,4 +1,4 @@
-
+<?php
 echo $_POST["method"]();
 
 /*Updates the server's host ip*/
@@ -20,6 +20,7 @@ function updatePort(p){
 	$data['port'] = p;
 
 	$newJsonString = json_encode($data);
+	echo '<script>console.log('+$newJsonString+')</script>';
 	file_put_contents('jsonFile.json', $newJsonString);
 }
 
@@ -45,3 +46,4 @@ function addToBlacklist(){
 	$json = json_encode($return);
 	echo $json;
 }
+?>

@@ -5,6 +5,9 @@
         <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
         <title>Bob's Web Proxy Management Console</title>
         <link rel="stylesheet" type="text/css" href="bobs_style.css"/>
+        <script type="text/javascript" src="http://yui.yahooapis.com/combo?3.5.0/build/yui/yui-min.js"></script>
+        <script type="text/javascript" src="bobs_ajax.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         <style type="text/css">
             html {
                 background-color: #000000;
@@ -32,13 +35,11 @@
         </style>
     </head>
     <body>
-        <h1>Bob's Web Proxy Management Console</h1>
+        <h1 id="bobobo">Bob's Web Proxy Management Console</h1>
         <h1>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</h1>
         <div id="out"></div>
         <input id="in" tabindex="0"/>
     </body>
-    <script type="text/javascript" src="http://yui.yahooapis.com/combo?3.5.0/build/yui/yui-min.js"></script>
-    <script type="text/javascript" src="bobs_ajax.js"></script>
     <script type="text/javascript">
         YUI().use("node", function(Y) {
 
@@ -58,6 +59,8 @@
                 {
                     name: "changeport",
                     handler: function(args) {
+                        outputToConsole("Yeah baby: "+args[0]);
+                        updatePort(args[0]);
                         outputToConsole("The port of the server has been changed to: "+args[0]);
                     }
                 },
@@ -65,15 +68,7 @@
                 {
                     name: "changehost",
                     handler: function(args) {
-
-                        $.ajax({
-                          type: "POST",
-                          url: "bobs_backend.php",
-                          data: { name: "John" }
-                        }).done(function( msg ) {
-                          alert( "Data Saved: " + msg );
-                        });  
-
+                        updateHost(args[0]);
                         outputToConsole("The host of the server has been changed to: "+args[0]);
                     }
                 }
@@ -95,6 +90,7 @@
                     }
                 }
 
+                outputToConsole("Unsupported Command: " + command);
                 outputToConsole("Unsupported Command: " + command);
             }
 
