@@ -1,39 +1,8 @@
-function loadDatabaseList(){
-	doAjax();
-	return;
-}
 
-function theAjax(method, server, username, password){
-	return $.ajax({
-		url: 'getDatabases.php',
-		type: 'POST',
-		data: {method: method, server: server, username: username, password: password}
-	});
-}
-
-function theAjax2(b_urls){
-	return $.ajax({
-		url: 'bobs_backend.php',
-		type: 'POST',
-		data: {b_urls: b_urls}
-	});
-}
-
-/*
-function doAjax(){
-	var server, username, password;
-	server = #server;
-	username = #username;
-	password = #password;
-	ajax = theAjax("getDatabases",server,username,password);
-	ajax.done(processData);
-	ajax.fail(function (){alert('Failure'); });
-}
-*/
-
+/*Updates the server's url blacklist.*/
 function updateBlacklist(b_urls){
 	ajax = $.ajax({
-		url: 'bobs_backend.php',
+		url: 'backend.php',
 		type: 'POST',
 		data: {method: 'updateBlacklist', b_urls: b_urls}
 	});
@@ -41,10 +10,11 @@ function updateBlacklist(b_urls){
 	ajax.fail(function (){alert('Ajax failure when updating the blacklist'); });
 }
 
+/*Updates the server's host ip address.*/
 function updateHost(host){
 	h = JSON.stringify(host);
 	ajax = $.ajax({
-		url: '/bobs_backend.php',
+		url: '/backend.php',
 		type: 'POST',
 		data: {method: 'updateHost', host: h}
 	});
@@ -52,10 +22,11 @@ function updateHost(host){
 	ajax.fail(function (){alert('Ajax failure when updating the host'); });
 }
 
+/*Updates the server's port number.*/
 function updatePort(port){
 	window.alert("We're here now anyway...");
 	ajax = $.ajax({
-		url: 'bobs_backend.php',
+		url: 'backend.php',
 		type: 'POST',
 		data: {method: 'updatePort', port: port}
 	});
@@ -63,6 +34,7 @@ function updatePort(port){
 	ajax.fail(function (){alert('Ajax failure when updating the port'); });
 }
 
+/*Prints the server's url blacklist to the management console.*/
 function printBlacklist(response){
 	var response = JSON.parse(response);
 	outputToConsole("The blacklist has been updated to include: ");
@@ -72,17 +44,14 @@ function printBlacklist(response){
 	}
 }
 
+/*Prints the server's host ip address to the management console.*/
 function printHost(response){
 	var response = JSON.parse(response);
 	outputToConsole("The host has been updated to be: "+response.data['host']);
 }
 
+/*Prints the server's port to the management console.*/
 function printPort(response){
 	var response = JSON.parse(response);
 	outputToConsole("The port has been updated to be: "+response.data['port']);
 }
-
-
-
-
-
