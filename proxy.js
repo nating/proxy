@@ -32,7 +32,7 @@ function getIndex(res){
 
 //Returns bobs_style.css
 function getCSS(res){
-	fs.readFile("bobs_style.css", function (err, data) {
+	fs.readFile("style.css", function (err, data) {
 		if(err){
 			res.writeHead(404,"text/plain");
 			res.end("404: File not found:");
@@ -46,7 +46,7 @@ function getCSS(res){
 
 //Returns bobs_ajax.js
 function getAjax(res){
-	fs.readFile("bobs_ajax.js", function (err, data) {
+	fs.readFile("ajax.js", function (err, data) {
 		if(err){
 			res.writeHead(404,"text/plain");
 			res.end("404: File not found:");
@@ -60,7 +60,7 @@ function getAjax(res){
 
 //Returns bobs_backend.php
 function getPHP(res){
-	fs.readFile("bobs_backend.php", function (err, data) {
+	fs.readFile("backend.php", function (err, data) {
 		if(err){
 			res.writeHead(404,"text/plain");
 			res.end("404: File not found:");
@@ -80,9 +80,9 @@ var server = http.createServer(function(b_req,b_res){
 
 	//Handle calls for management console data
 	if(b_req.url === "/index" || b_req.url === "/" | b_req.url === ""){ return getIndex(b_res); }
-	if(b_req.url === "/bobs_style.css"){ return getCSS(b_res); }
-	if(b_req.url === "/bobs_ajax.js"){ return getAjax(b_res); }
-	if(b_req.url === "/bobs_backend.php"){ return getPHP(b_res); }
+	if(b_req.url === "/style.css"){ return getCSS(b_res); }
+	if(b_req.url === "/ajax.js"){ return getAjax(b_res); }
+	if(b_req.url === "/backend.php"){ return getPHP(b_res); }
 
 
 	//Parse the requested URL
