@@ -4,13 +4,14 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
         <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
         <script type="text/javascript" src="http://yui.yahooapis.com/combo?3.5.0/build/yui/yui-min.js"></script>
+        <script type="text/javascript" src="ajax.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-        <title>Proxy management console</title>
+        <title>overt-aproxymations management console</title>
         <link rel="stylesheet" type="text/css" href="style.css"/>
     </head>
     <body>
-        <h1>proxy management console</h1>
-        <h1>~~~~~~~~~~~~~~~~~~~~~~~~</h1>
+        <h1 id="bobobo">proxy management console</h1>
+        <h1>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</h1>
         <div id="out"></div>
         <input id="in" tabindex="0"/>
     </body>
@@ -22,15 +23,19 @@
                 {
                     name: "blacklist",
                     handler: function(args) {
-                        postToServer("blacklist",args);
-                        outputToConsole("This url has been blacklisted by the server:"+args);
+                        updateBlacklist(args);
+                        outputToConsole("The following urls have been blacklisted by the server:");
+                        for(var i=0;i<args.length;i++){
+                            outputToConsole("\t"+args[i]);
+                        }
                     }
                 },
 
                 {
                     name: "changeport",
                     handler: function(args) {
-                        postToServer("changeport",args);
+                        outputToConsole("Yeah baby: "+args[0]);
+                        updatePort(args[0]);
                         outputToConsole("The port of the server has been changed to: "+args[0]);
                     }
                 },
@@ -38,7 +43,7 @@
                 {
                     name: "changehost",
                     handler: function(args) {
-                        postToServer("changehost",args);
+                        updateHost(args[0]);
                         outputToConsole("The host of the server has been changed to: "+args[0]);
                     }
                 }
@@ -79,24 +84,5 @@
                 });
             });
         });
-
-        function postToServer(method,data){
-
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("POST", '/'+method+'/'+data, true);
-            xhttp.send();
-
-            /*
-            //Create Request
-            var p_req = http.request({
-              port: 80,
-              host: '127.0.0.1',
-              method: 'POST',
-              path: '/'
-            });
-            p_req.write('{"method": "'+method+'","data": "'+data+'"}');
-            p_req.end();
-            p_req.on('error',console.log);*/
-        };
     </script>
 </html>

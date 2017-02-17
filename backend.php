@@ -14,6 +14,7 @@ function updateHost(h_ip){
 
 /*Updates the server's port*/
 function updatePort(p){
+	echo 'hello babhabh';
 	$jsonString = file_get_contents('config.json');
 	$data = json_decode($jsonString, true);
 	
@@ -22,6 +23,7 @@ function updatePort(p){
 	$newJsonString = json_encode($data);
 	echo '<script>console.log('+$newJsonString+')</script>';
 	file_put_contents('jsonFile.json', $newJsonString);
+	return 1;
 }
 
 /*Adds urls to the server's blacklist*/

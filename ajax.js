@@ -26,12 +26,19 @@ function updateHost(host){
 function updatePort(port){
 	window.alert("We're here now anyway...");
 	ajax = $.ajax({
-		url: 'backend.php',
+		url: 'backend',
 		type: 'POST',
-		data: {method: 'updatePort', port: port}
+		data: {method: 'updatePort', port: port},
+		success: function(response) {
+		    window.alert ('Success response from ajax php call: ' + response);
+		},
+		error: function(response) {
+		    console.log(response);
+		    window.alert('Error response from ajax php call: ' + response);
+		}
 	});
 	ajax.done(printPort(ajax.data));
-	ajax.fail(function (){alert('Ajax failure when updating the port'); });
+	ajax.fail(function (f_res){alert('Ajax failure when updating the port'+f_res); });
 }
 
 /*Prints the server's url blacklist to the management console.*/
