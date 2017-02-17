@@ -1,179 +1,211 @@
 var http = require('http'),
-	url = require('url'),
-	fs = require('fs');
+    url = require('url'),
+    fs = require('fs');
 
 var config = JSON.parse(fs.readFileSync("config.json"));
 
 var host = config.host,
-	port = config.port;
+    port = config.port,
+    blacklist = [];
 
-//	b == browser
-//	p == proxy
+    blacklist = config.blacklist;
+    console.log(blacklist);
 
-//Returns a 404 error in the response object
-function notFound(res){
-	res.writeHead(404,"text/plain");
-	res.end("404: File not found:");
-}
-
-//Returns index.html
-function getIndex(res){
-	fs.readFile("index.html", function (err, data) {
-		if(err){
-			res.writeHead(404,"text/plain");
-			res.end("404: File not found:");
-		}
-		else{
-		    res.writeHead(200, {'Content-Type': 'text/html'});
-		    res.end(data);
-		}
-   	});
-}
-
-//Returns bobs_style.css
-function getCSS(res){
-	fs.readFile("style.css", function (err, data) {
-		if(err){
-			res.writeHead(404,"text/plain");
-			res.end("404: File not found:");
-		}
-		else{
-		    res.writeHead(200, {'Content-Type': 'text/css'});
-		    res.end(data);
-		}
-	});
-}
-
-//Returns bobs_ajax.js
-function getAjax(res){
-	fs.readFile("ajax.js", function (err, data) {
-		if(err){
-			res.writeHead(404,"text/plain");
-			res.end("404: File not found:");
-		}
-		else{
-		    res.writeHead(200, {'Content-Type': 'text/javascript'});
-		    res.end(data);
-		}
-	});
-}
-
-//Returns bobs_backend.php
-function getPHP(res){
-	fs.readFile("backend.php", function (err, data) {
-		if(err){
-			res.writeHead(404,"text/plain");
-			res.end("404: File not found:");
-		}
-		else{
-		    res.writeHead(200, {'Content-Type': 'text/php'});
-		    res.end(data);
-		}
-	});
-}
-
-
-
-var server = http.createServer(function(b_req,b_res){
-	console.log("Recieved a request for: "+b_req.url);
-
-
-	//Handle calls for management console data
-	if(b_req.url === "/index" || b_req.url === "/" | b_req.url === ""){ return getIndex(b_res); }
-	if(b_req.url === "/style.css"){ return getCSS(b_res); }
-	if(b_req.url === "/ajax.js"){ return getAjax(b_res); }
-	if(b_req.url === "/backend.php"){ return getPHP(b_res); }
-
-
-	//Parse the requested URL
-	var b_url = url.parse(b_req.url,true);
-
-
-	console.log("b_req.port:"+b_req.port);
-	console.log("b_req.host:"+b_req.host);
-	console.log("b_req.url:"+b_req.url);
-	console.log("b_req.path:"+b_req.path);
-	console.log("b_url.port:"+b_url.port);
-	console.log("b_url.host:"+b_url.host);
-	console.log("b_url.type:"+b_url.type);
-	console.log("b_url.path:"+b_url.path);
-	//Read and parse the query parameter
-	var p_url = url.parse(b_url.query.url);
-	console.log("p_url.port:"+p_url.port);
-	console.log("p_url.host:"+p_url.host);
-	console.log("p_url.type:"+p_url.type);
-	console.log("p_url.path:"+p_url.path);
-	console.log("p_url.url:"+p_url.url);
-	console.log("b_url.query.url:"+b_url.query.url);
-	console.log("b_req.url:"+b_req.url);
-	console.log("p_url:"+p_url);
-	console.log("b_url:"+b_url);
-	console.log("b_req:"+b_req);
-
-
-	//return 404 if there is no query in the url, or if the query does not contain a url parameter
-	if(!b_url.query || !b_url.query.url){ return notFound(b_res); }
-
-
-	//Here is a bit of caching code
-	var file = fs.readFile("cache/"+p_url, function(error,data){
-
-		//If not cached
-		if(error){
-			console.log("Not cached");
-			//Make http request
-			var options = {
-				port     : p_url.port   || 80,
-			   	host     : p_url.host   || 'localhost',
-			   	method   : p_url.type   || 'GET',
-			   	path     : p_url.url   	|| '/'
-			}
-			console.log("options.port:"+options.port);
-			console.log("options.host:"+options.host);
-			console.log("options.method:"+options.method);
-			console.log("options.path:"+options.path);
-			var p_req = http.request(options);
-			console.log("Made a request for:"+options.path);
-			p_req.end();
-
-			//Handle responses
-			b_res.on('response', function(p_res){
-				console.log("1738");
-				//Pass headers through to browser
-				b_res.writeHead(p_res.statusCode, p_res.headers);
-
-				//Pass data through to browser
-				p_res.on('data',function(chunk){
-					b_res.write(chunk);
-				});
-
-				p_res.on('end', function(){
-					b_res.end();
-				});
-			});
-		}
-		//If cached
-		else{
-			console.log("Cached");
-			b_res.writeHead(200,{"Content-type":"text/html"});
-			b_res.end(data);
-		}
-	});
-
-
-})
-
-server.listen(port,host, function(){
-	console.log("Listening on:"+host+":"+port);
-});
 
 //Dynamically change the host and port if they are changed in the config file
 fs.watchFile("config.json",function(){
-	config = JSON.parse(fs.readFileSync("config.json"));
-	host = config.host;
-	port = config.port;
-	server.close();
-	server.listen(port,host, function(){
-		console.log("Now listening on:"+host+":"+port);
-	});
-})
+  config = JSON.parse(fs.readFileSync("config.json"));
+  host = config.host;
+  port = config.port;
+  blacklist = config.blacklist;
+  server.close();
+  server.listen(port,host, function(){
+    console.log("Now listening on:"+host+":"+port);
+  });
+});
+
+
+//Create server
+var server = http.createServer(function(b_req, b_res) {
+
+  p_url = url.parse(b_req.url,true);
+
+  //Check if host is in Blacklist
+  for (i in blacklist) {
+    if (blacklist[i]===p_url.host) {
+      console.log("Denied: " + b_req.method + " " + b_req.url);
+      return b_res.end('Whoops that is denied mate!!');
+    }
+  }
+
+  //Print out recieved request
+  console.log(b_req.connection.remoteAddress + ": " + b_req.method + " " + b_req.url+" host:"+p_url.host);
+
+  
+  console.log("b_req.url:"+b_req.url);
+  console.log("b_req.host:"+b_req.host);
+  console.log("b_req.method:"+b_req.method);
+  console.log("b_req.path:"+b_req.path);
+  console.log("b_req.pathname:"+b_req.pathname);
+  console.log("p_req.url:"+p_url.url);
+  console.log("p_req.host:"+p_url.host);
+  console.log("p_req.method:"+p_url.method);
+  console.log("p_req.path:"+p_url.path);
+  console.log("p_req.pathname:"+p_url.pathname);
+  console.log("b_req.headers:"+b_req.headers['accept'].split(',')[0]);
+  console.log("b_req.method"+b_req.method);
+  if(p_url.host === host+":"+port)
+  {
+    if(b_req.method=='GET'){
+      return getLocal(b_req,b_res);
+    }
+    else if(b_req.method=='POST'){
+      return postLocal(b_req,b_res);
+    }
+  }
+
+  //Create Request
+  var p_req = http.request({
+      port: 80,
+      host: p_url.host,
+      method: b_req.headers['method'],
+      path: p_url.path
+  });
+  p_req.end();
+  p_req.on('error',console.log)
+
+  //Proxy Response handler
+  p_req.on('response', function (p_res) {
+    p_res.on('data', function(chunk) {
+      b_res.write(chunk, 'binary');
+    });
+    p_res.on('end', function() {
+      b_res.end();
+    });
+    b_res.writeHead(p_res.statusCode, p_res.headers);
+  });
+
+  //Proxy Request handler
+  b_req.on('data', function(chunk) {
+    p_req.write(chunk, 'binary');
+  });
+  b_req.on('end', function() {
+    p_req.end();
+  });
+});
+
+//Start up the Server
+server.listen(port,host, function(){
+  console.log("Listening on:"+host+":"+port);
+});
+
+//Serves the pages that are local on the server
+function getLocal(b_req,b_res){
+
+  p_url = url.parse(b_req.url,true);
+
+  //Serve the index page
+  if(p_url.host === "127.0.0.1:4000" && p_url.path==="/"){
+    fs.readFile("index.html", function (err, data) {
+      if(err){
+        b_res.writeHead(404,"text/plain");
+        b_res.end("404: File not found:");
+      }
+      else{
+          b_res.writeHead(200, {'Content-Type': 'text/html'});
+          b_res.end(data);
+      }
+    });
+  }
+  //Serve other pages
+  else{
+    var filename = p_url.path.substring(1);
+    var expectedFileType = b_req.headers['accept'].split(',')[0];
+    console.log("Reading the file:"+filename);
+    fs.readFile(filename, function (err, data) {
+      if(err){
+        b_res.writeHead(404,"text/plain");
+        b_res.end("404: File not found:");
+      }
+      else{
+          b_res.writeHead(200, {'Content-Type': expectedFileType });
+          b_res.end(data);
+      }
+    });
+  }
+}
+
+//Updates a file local to the server
+function postLocal(b_req,b_res){
+
+  console.log(b_req.connection.remoteAddress + ": " + b_req.method + " " + b_req.url+" host:"+p_url.host);
+
+  p_url = url.parse(b_req.url,true);
+  var method = p_url.path.split('/')[1];
+  var data = p_url.path.split('/')[2];
+
+  //Call updating method
+  if(method === "blacklist"){
+    blacklistUrl(data);
+    b_res.end();
+  }
+  else if(method === "changeport"){
+    changeport(data);
+    b_res.end();
+  }
+  else if(method === "changehost"){
+    changehost(data);
+    b_res.end();
+  }
+}
+
+//BlackLists a url from the proxy, unless it is already blacklisted
+function blacklistUrl(url){
+
+  for(i in blacklist){
+    if(blacklist[i]===url){
+      return console.log('The url '+url+' was already blacklisted.');
+    }
+  }
+
+  blacklist += url;
+  console.log("hetyn, now the blackist is:"+blacklist);
+
+  var c = JSON.parse(fs.readFileSync("config.json"));
+
+  c.blacklist = JSON.stringify(blacklist);
+
+  fs.writeFile('config.json', JSON.stringify(c), (err) => {
+    if (err) throw err;
+    return console.log('The Blacklist has been updated to:'+ blacklist);
+  });
+}
+
+//Changes the port of the proxy
+function changeport(new_p){
+
+  var c = JSON.parse(fs.readFileSync("config.json"));
+
+  c.port = new_p;
+
+  fs.writeFile('config.json', JSON.stringify(c), (err) => {
+    if (err) throw err;
+    return console.log('The port number was updated to:'+ new_p);
+  });
+}
+
+//Changes the host address of the proxy
+function changehost(new_h){
+
+  var c = JSON.parse(fs.readFileSync("config.json"));
+
+  c.host = new_h;
+
+  fs.writeFile('config.json', JSON.stringify(c), (err) => {
+    if (err) throw err;
+    return console.log('The host address was updated to:'+ new_h);
+  });
+}
+
+
+
