@@ -11,9 +11,11 @@ var rl = readline.createInterface({
 
 //Get configurations from "config.json"
 var config = JSON.parse(fs.readFileSync("config.json"));
+var cache = JSON.parse(fs.readFileSync("cache.json"));
 var host = config.host,
     port = config.port,
-    blacklist = config.blacklist;
+    blacklist = config.blacklist,
+    cachedUrls = cache.urls;
 
 /*---------------------------------------------WATCH CONFIG------------------------------------------------*/
 
@@ -32,6 +34,19 @@ function updateConfig(){
   	return readCommand();
 }
 
+/*---------------------------------------------WATCH CACHE------------------------------------------------*/
+
+//Dynamically change the host, port, and blacklist if they are changed in the config file
+fs.watchFile("cache.json",function(){
+	updateCache();
+});
+
+function updateCache(){
+  	cache = JSON.parse(fs.readFileSync("cache.json"));
+  	cachedUrls = cache.urls;
+  	return readCommand();
+}
+
 
 /*---------------------------------------------HTTP SERVER------------------------------------------------*/
 
@@ -42,7 +57,7 @@ var server = http.createServer(function(b_req, b_res) {
   	//Check if host is in Blacklist
   	for (i in blacklist) {
     	if (blacklist[i]===p_url.host) {
-      		console.log("\x1b[32m","DENIED ("+blacklist[i]+") " + b_req.method + " " + b_req.url);
+      		console.log("\x1b[31m","DENIED ("+blacklist[i]+") " + b_req.method + " " + b_req.url);
       		b_res.writeHead(403);
       		return b_res.end("<h1>This domain has been blacklisted.<h1>");
     	}
@@ -52,6 +67,13 @@ var server = http.createServer(function(b_req, b_res) {
   	var s_domain = b_req.url.split(':')[0];
   	var s_port = b_req.url.split(':')[1]
   	console.log("\x1b[32m","Request recieved for:"+s_domain+":"+s_port); readCommand();
+
+  	//Check cache
+  	for(var i=0;i<cachedUrls.length;i++){
+  		if(url===cachedUrls[i]){
+  			return serveCached(b_req,b_res);
+  		}
+  	}
 
   	//Create Request
   	var p_req = http.request({
@@ -65,11 +87,29 @@ var server = http.createServer(function(b_req, b_res) {
 
   	//Proxy Response handler
   	p_req.on('response', function (p_res) {
+
+  		if(p_res.headers.pragma!=="no-cache"){
+	  		var c = JSON.parse(fs.readFileSync("cache.json"));
+
+	  		responses = c.responses;
+
+	  		responses[url] = responses[url] || {};
+	  		responses[url]['headers'].push(p_res.headers);
+
+
+			c.urls.push(p_res.headers);
+  			console.log("\x1b[33m","Cached"); readCommand();
+
+			fs.writeFile('cache.json', JSON.stringify(c), (err) => {
+				if (err) throw err;
+			});
+  		}
+
     	p_res.on('data', function(chunk) {
-     	 b_res.write(chunk, 'binary');
+     		b_res.write(chunk, 'binary');
     	});
     	p_res.on('end', function() {
-      	b_res.end();
+      		b_res.end();
     	});
     	b_res.writeHead(p_res.statusCode, p_res.headers);
   	});
