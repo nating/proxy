@@ -59,7 +59,7 @@ var server = http.createServer(function(b_req, b_res) {
 	c = JSON.parse(fs.readFileSync("cache.json"));
 	if(cached(b_req.url)){
   		console.log("\x1b[33m","Serving cached data for "+b_req.url); readCommand();
-  		var chunks = JSON.stringify(c[b_req.url].data[0]);
+  		var chunks = JSON.stringify(c[b_req.url].data);
   		b = new Buffer(JSON.parse(chunks));
   		c[b_req.url].header['content-length'] = b.length;
   		c[b_req.url].header['accept-encoding'] = b_req.headers['accept-encoding'];
@@ -88,7 +88,7 @@ var server = http.createServer(function(b_req, b_res) {
     		body.push(chunk);
      		b_res.write(chunk, 'binary');
     	});
-    	p_res.on('end', function(chunk) {
+    	p_res.on('end', function() {
     		cacheData(b_req.url,body,p_res.statusCode,p_res.headers);
       		b_res.end();
     	});
@@ -203,11 +203,11 @@ function cacheData(url,data,status,header){
 	console.log("\x1b[33m","Caching url: "+url)
 	//console.log("header: "+JSON.stringify(header)+"\ncache-control:" +header['cache-control']);
 
-	c[url] = {"header":header,"status":status,"data":data};
+	c[url] = {"header":header,"status":status,"data":data.toString()};
 	str = JSON.stringify(c);
 	if(isJSON(str)){
 	  	var ws = fs.createWriteStream('cache.json');
-	  	ws.write(JSON.stringify(c));
+	  	ws.write(str);
 	}
 	else{
 		console.log("\x1b[31m","Not valid JSON anymore");
