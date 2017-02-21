@@ -34,24 +34,11 @@ function updateConfig(){
   	return readCommand();
 }
 
-/*---------------------------------------------WATCH CACHE------------------------------------------------*/
-
-//Dynamically change the host, port, and blacklist if they are changed in the config file
-fs.watchFile("cache.json",function(){
-	updateCache();
-});
-
-function updateCache(){
-  	cache = JSON.parse(fs.readFileSync("cache.json"));
-  	cachedUrls = cache.urls;
-  	return readCommand();
-}
-
-
 /*---------------------------------------------HTTP SERVER------------------------------------------------*/
 
 //Create the proxy
 var server = http.createServer(function(b_req, b_res) {
+
   	p_url = url.parse(b_req.url,true);
 
   	//Check if host is in Blacklist
@@ -59,7 +46,7 @@ var server = http.createServer(function(b_req, b_res) {
     	if (blacklist[i]===p_url.host) {
       		console.log("\x1b[31m","DENIED ("+blacklist[i]+") " + b_req.method + " " + b_req.url);
       		b_res.writeHead(403);
-      		return b_res.end("<h1>This domain has been blacklisted.<h1>");
+      		return b_res.end("<h1>This domain has been blacklisted from the Proxy.<h1>");
     	}
   	}
 
@@ -68,12 +55,21 @@ var server = http.createServer(function(b_req, b_res) {
   	var s_port = b_req.url.split(':')[1]
   	console.log("\x1b[32m","Request recieved for:"+s_domain+":"+s_port); readCommand();
 
-  	//Check cache
-  	for(var i=0;i<cachedUrls.length;i++){
-  		if(url===cachedUrls[i]){
-  			return serveCached(b_req,b_res);
-  		}
-  	}
+  	//Served cached data if available
+	c = JSON.parse(fs.readFileSync("cache.json"));
+	if(cached(b_req.url)){
+  		console.log("\x1b[33m","Serving cached data for "+b_req.url); readCommand();
+  		var chunks = JSON.stringify(c[b_req.url].data[0]);
+  		b = new Buffer(JSON.parse(chunks));
+  		c[b_req.url].header['content-length'] = b.length;
+  		c[b_req.url].header['accept-encoding'] = b_req.headers['accept-encoding'];
+  		b_res.writeHead(c[b_req.url].status,c[b_req.url].header);
+  		b_res.write(b);
+  		return b_res.end();
+	}
+
+	//Create variable for caching responses to the http request
+	var body = [];
 
   	//Create Request
   	var p_req = http.request({
@@ -88,27 +84,12 @@ var server = http.createServer(function(b_req, b_res) {
   	//Proxy Response handler
   	p_req.on('response', function (p_res) {
 
-  		if(p_res.headers.pragma!=="no-cache"){
-	  		var c = JSON.parse(fs.readFileSync("cache.json"));
-
-	  		responses = c.responses;
-
-	  		responses[url] = responses[url] || {};
-	  		responses[url]['headers'].push(p_res.headers);
-
-
-			c.urls.push(p_res.headers);
-  			console.log("\x1b[33m","Cached"); readCommand();
-
-			fs.writeFile('cache.json', JSON.stringify(c), (err) => {
-				if (err) throw err;
-			});
-  		}
-
     	p_res.on('data', function(chunk) {
+    		body.push(chunk);
      		b_res.write(chunk, 'binary');
     	});
-    	p_res.on('end', function() {
+    	p_res.on('end', function(chunk) {
+    		cacheData(b_req.url,body,p_res.statusCode,p_res.headers);
       		b_res.end();
     	});
     	b_res.writeHead(p_res.statusCode, p_res.headers);
@@ -186,6 +167,63 @@ server.addListener('connect', function (b_req, b_socket, bodyhead) {
 
 });
 
+/*-------------------------------------------------CACHE---------------------------------------------------*/
+
+//Dynamically change the host, port, and blacklist if they are changed in the config file
+fs.watchFile("cache.json",function(){
+	updateCache();
+});
+function updateCache(){
+  	cache = JSON.parse(fs.readFileSync("cache.json"));
+  	cachedUrls = cache.urls;
+  	return readCommand();
+}
+
+//Checks if a url is cached
+function cached(url){
+	c = JSON.parse(fs.readFileSync("cache.json"));
+	if(c[url]){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+//Puts header and data for response to a url into the cache
+function cacheData(url,data,status,header){
+	if(header['cache-control']){
+		for(i in header['cache-control'].split(',')){
+			if(header['cache-control'].split(',')[i].search('no-cache')!=-1){
+				return;
+			}
+		}
+	}
+	c = JSON.parse(fs.readFileSync("cache.json"));
+	console.log("\x1b[33m","Caching url: "+url)
+	//console.log("header: "+JSON.stringify(header)+"\ncache-control:" +header['cache-control']);
+
+	c[url] = {"header":header,"status":status,"data":data};
+	str = JSON.stringify(c);
+	if(isJSON(str)){
+	  	var ws = fs.createWriteStream('cache.json');
+	  	ws.write(JSON.stringify(c));
+	}
+	else{
+		console.log("\x1b[31m","Not valid JSON anymore");
+	}
+}
+
+//Checks if text is valid JSON
+function isJSON(text){
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+
 /*---------------------------------------------MANAGEMENT CONSOLE-----------------------------------------------*/
 
 //Read in commands from the management console
@@ -232,6 +270,15 @@ function status(){
 /*-----------------------QUIT----------------------*/
 function quit(){
 	server.close();abort();
+}
+
+
+/*------------------CLEARCACHE--------------------*/
+function clearCache(){
+	fs.writeFile('cache.json', "{}", (err) => {
+    	if (err) throw err;
+  	});
+  	readCommand();
 }
 
 
