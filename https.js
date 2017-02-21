@@ -204,6 +204,8 @@ function cacheData(url,data,status,header){
 	//console.log("header: "+JSON.stringify(header)+"\ncache-control:" +header['cache-control']);
 
 	c[url] = {"header":header,"status":status,"data":data.toString()};
+
+	
 	str = JSON.stringify(c);
 	if(isJSON(str)){
 	  	var ws = fs.createWriteStream('cache.json');
