@@ -16,7 +16,7 @@ $brew install node
 ### Running the Proxy
 To run the proxy on the specified port and host ip from the config file:
 ```
-$Node proxy.js
+$node proxy.js
 ```
 
 ### Management Console Commands
