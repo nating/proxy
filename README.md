@@ -23,39 +23,39 @@ $node proxy.js
 
 To list the avaialable commands:
 ```
-$help
+>help
 ```
 To list the contents of the blacklist:
 ```
-$blacklist
+>blacklist
 ```
 To add domains to the blacklist:
 ```
-$blacklist <domain> {<domain>}
+>blacklist <domain> {<domain>}
 ```
 To remove domains from the blacklist:
 ```
-$blacklistrm <domain> {<domain>}
+>blacklistrm <domain> {<domain>}
 ```
 To clear the cache:
 ```
-$clearcache
+>clearcache
 ```
 To print the current port, host ip, and blacklist of the proxy:
 ```
-$status
+>status
 ```
 To change the port of the proxy:
 ```
-changeport <portnumber>
+>changeport <portnumber>
 ```
 To change the host ip of the proxy:
 ```
-$changehost <hostip>
+>changehost <hostip>
 ```
 To terminate the proxy:
 ```
-$quit
+>quit
 ```
 
 Changes can be made to the config.json file while the proxy is running, and it will automatically reconfigure. This is not recommended though, as making changes via the management console ensures that the config.json remains in valid JSON format.
