@@ -7,7 +7,8 @@ This web proxy needs Node to run:
 $npm install node
 ```
 or
-```$brew install node
+```
+$brew install node
 ```
 
 ## Usage
